@@ -32,17 +32,10 @@ def start(update, context):
     """Send a message when the command /start is issued."""
 
     text = '🐈 Welcome to meownace, ' + str(
-        update.message.from_user.first_name) + '! 🐈' + '\nType /help for more info.\n'
+        update.message.from_user.first_name) + '! 🐈' + '\nUse /help for the list of commands.\n'
 
     context.bot.send_animation(chat_id=update.message.chat_id,
-                               animation="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/d7461165-0cc6"
-                                         "-432d-8b4e-867918a69c75/dekbqui-f3ef15aa-1435-41f4-93f5-8e95be94f894.gif"
-                                         "?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
-                                         ".eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjo"
-                                         "idXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgi"
-                                         "OiJcL2ZcL2Q3NDYxMTY1LTBjYzYtNDMyZC04YjRlLTg2NzkxOGE2OWM3NVwvZGVrYnF1aS1mM2VmM"
-                                         "TVhYS0xNDM1LTQxZjQtOTNmNS04ZTk1YmU5NGY4OTQuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aW"
-                                         "NlOmZpbGUuZG93bmxvYWQiXX0.q_AOQYIMVd45WdK3hPHAiNK7eHH_CCBmLA47ZWQGf0A",
+                               animation="https://i.imgur.com/caRzRKD.gif",
                                caption=text)
 
     # Connect to the SQL db.
@@ -1175,7 +1168,7 @@ def main():
 
     # Daily reset
     job_reset = j.run_daily(daily_reset, days=(0, 1, 2, 3, 4, 5, 6),
-                            time=datetime.time(hour=11, minute=59, second=0,
+                            time=datetime.time(hour=23, minute=59, second=0,
                                                tzinfo=pytz.timezone("Asia/Singapore")))
 
     job_reminder = j.run_daily(list_reminder, days=(0, 1, 2, 3, 4, 5, 6),
@@ -1192,7 +1185,7 @@ def main():
 
 
 if __name__ == '__main__':
-    bot_token = "token"
+    bot_token = "TOKEN"
     endpoint = f"https://api.telegram.org/bot{bot_token}/getUpdates"
     response = requests.get(endpoint)
     print(response.text)
