@@ -15,14 +15,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-# Define a few command handlers. These usually take the two arguments update and
-# context. Error handlers also receive the raised TelegramError object in error.
-
-# Start
-
 def send_typing_action(func):
-    """Sends typing action while processing func command."""
-
     @wraps(func)
     def command_func(update, context, *args, **kwargs):
         context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
@@ -42,16 +35,24 @@ def start(update, context):
         update.message.from_user.first_name) + '! 🐈' + '\nType /help for more info.\n'
 
     context.bot.send_animation(chat_id=update.message.chat_id,
-                               animation="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/d7461165-0cc6-432d-8b4e-867918a69c75/dekbqui-f3ef15aa-1435-41f4-93f5-8e95be94f894.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcL2Q3NDYxMTY1LTBjYzYtNDMyZC04YjRlLTg2NzkxOGE2OWM3NVwvZGVrYnF1aS1mM2VmMTVhYS0xNDM1LTQxZjQtOTNmNS04ZTk1YmU5NGY4OTQuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.q_AOQYIMVd45WdK3hPHAiNK7eHH_CCBmLA47ZWQGf0A",
+                               animation="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/d7461165-0cc6"
+                                         "-432d-8b4e-867918a69c75/dekbqui-f3ef15aa-1435-41f4-93f5-8e95be94f894.gif"
+                                         "?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
+                                         ".eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjo"
+                                         "idXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgi"
+                                         "OiJcL2ZcL2Q3NDYxMTY1LTBjYzYtNDMyZC04YjRlLTg2NzkxOGE2OWM3NVwvZGVrYnF1aS1mM2VmM"
+                                         "TVhYS0xNDM1LTQxZjQtOTNmNS04ZTk1YmU5NGY4OTQuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aW"
+                                         "NlOmZpbGUuZG93bmxvYWQiXX0.q_AOQYIMVd45WdK3hPHAiNK7eHH_CCBmLA47ZWQGf0A",
                                caption=text)
 
-    """Add user's chatid to the db users"""
     # Connect to the SQL db.
     conn = sqlite3.connect('dbs/users.db')
     c = conn.cursor()
 
     chat_id = str(update.message.chat_id)
     username = update.message.from_user.username
+    if username is None:
+        username = update.message.from_user.first_name
 
     # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
     if c.execute("SELECT 1 FROM USERS WHERE CHATID='" + chat_id + "'").fetchone():
@@ -76,10 +77,10 @@ def help(update, context):
                              text='Meownace is here to help! ヾ(•ω•`)o\n'
                                   'Use the commands shown below to interact with me:\n\n'
                                   ' 📅 TODO 📅\n'
-                                  '/addtask <?> - add a task \n'
-                                  '/cleartask <?> - remove a finished task \n'
+                                  '/add <name of task> - add a task \n'
+                                  '/clear <name of task> or <index> - remove a finished task \n'
                                   '/clearall - remove all finished tasks \n'
-                                  '/deletetask <?> - remove a task \n'
+                                  '/delete <name of task> or <index> - remove a task \n'
                                   '/deleteall - remove all tasks\n'
                                   '/list - show all your tasks \n\n'
                                   '🏫STUDY🏫\n'
@@ -101,25 +102,30 @@ def help(update, context):
 @send_typing_action
 def addtask(update, context):
     input = update.message.text.lower().split()
+    chat_id = str(update.message.chat_id)
+
+    username = update.message.from_user.username
+    if username is None:
+        username = update.message.from_user.first_name
 
     if len(input) >= 2:
-        input.remove('/addtask')
+        input.remove('/add')
+
+        if all([x.isnumeric() for x in input]):
+            update.message.reply_text("The name of your task cannot consist of numbers only!")
+            return
 
         task = " ".join(input)
-
-        chat_id = str(update.message.chat_id)
-        username = update.message.from_user.username
 
         # Connect to the SQL db.
         conn = sqlite3.connect('dbs/todolist.db')
         c = conn.cursor()
 
-        message = ""
-
-        if c.execute("SELECT 1 FROM TODOLIST WHERE CHATID='" + chat_id + "' AND TASK = '" + task + "'").fetchone():
+        if c.execute("SELECT 1 FROM todolist WHERE chatid='" + chat_id + "' AND task = '" + task + "'").fetchone():
             message = "You already added this item into your to-do list!"
         else:
             c.execute("INSERT INTO TODOLIST VALUES('" + chat_id + "','" + task + "','" + username + "')")
+
             message = "Added to to-do list!"
 
         conn.commit()
@@ -128,37 +134,58 @@ def addtask(update, context):
         update.message.reply_text(message)
         show_list(update, context)
     else:
-        update.message.reply_text("Meownace needs your command in this format! -> /addtask <?>")
+        update.message.reply_text("Format: /add <name of task>")
+
+
+def get_arr_of_tasks(chat_id):
+    conn = sqlite3.connect('dbs/todolist.db')
+    c = conn.cursor()
+
+    c.execute("SELECT task FROM todolist WHERE chatid='" + chat_id + "'")
+
+    rows = [i[0] for i in c.fetchall()]
+    conn.close()
+    return rows
 
 
 @send_typing_action
 def cleartask(update, context):
     strings = update.message.text.lower().split()
+    chat_id = str(update.message.chat_id)
 
     if len(strings) >= 2:
-        strings.remove('/cleartask')
-
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/todolist.db')
-        c = conn.cursor()
-
-        chat_id = update.message.chat_id
-        chat_id = str(chat_id)
-
-        s = ' '.join(strings)
-        rc = c.execute("DELETE FROM TODOLIST WHERE CHATID='" + chat_id + "' AND TASK='" + s + "'").rowcount
-        conn.commit()
-        conn.close()
-
-        if rc <= 0:
-            update.message.reply_text("❌ Task was not found in your to-do list: " + s)
-        else:
-            update_health(chat_id, 10)
-            update.message.reply_text("✔️ Task successfully cleared from your list: " + s + "\n+hp!")
-
-
+        strings.remove('/clear')
     else:
-        update.message.reply_text("Meownace needs your command in this format! -> /cleartask <?>")
+        update.message.reply_text("Format: /clear <name of task> or /clear <index of task>")
+        return
+
+    # user inputs /clear <int>
+    if len(strings) == 1 and strings[0].isnumeric():
+        # get the name of the task from rows and delete it from the todolist db
+
+        rows = get_arr_of_tasks(chat_id)
+        try:
+            taskName = rows[int(strings[0]) - 1]
+        except IndexError:
+            update.message.reply_text("❌ Index is not in your to-do list.")
+            return
+
+    else:  # input is /clear <name of task>
+        taskName = ' '.join(strings)
+
+    conn = sqlite3.connect('dbs/todolist.db')
+    c = conn.cursor()
+    rc = c.execute("DELETE FROM todolist WHERE chatid='" + chat_id + "' AND task='" + taskName + "'").rowcount
+    conn.commit()
+    conn.close()
+
+    if rc <= 0:
+        update.message.reply_text("❌ Task was not found in your to-do list: " + taskName)
+    else:
+        update_health(chat_id, 10)
+        update.message.reply_text("✔Task successfully cleared from your list: " + taskName + "\n+hp!")
+
+        show_list(update, context)
 
 
 @send_typing_action
@@ -175,33 +202,45 @@ def clearall(update, context):
         update.message.reply_text("To-do list has been cleared of all tasks. Meownace is proud of you!")
     else:
         update.message.reply_text("Your to-do list is empty!")
+    conn.close()
 
 
 @send_typing_action
 def deletetask(update, context):
     strings = update.message.text.lower().split()
+    chat_id = str(update.message.chat_id)
 
     if len(strings) >= 2:
-        strings.remove('/deletetask')
-
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/todolist.db')
-        c = conn.cursor()
-
-        chat_id = str(update.message.chat_id)
-
-        s = ' '.join(strings)
-        rc = c.execute("DELETE FROM TODOLIST WHERE CHATID='" + chat_id + "' AND TASK='" + s + "'").rowcount
-        conn.commit()
-        conn.close()
-
-        if rc <= 0:
-            update.message.reply_text("❌ Task was not found in your to-do list: " + s)
-        else:
-            update.message.reply_text("✔️ Task successfully deleted from your list: " + s)
-
+        strings.remove('/delete')
     else:
-        update.message.reply_text("Meownace needs your command in this format: /deletetask <?>")
+        update.message.reply_text("Format: /delete <name of task> or /delete <index of task>")
+        return
+
+    # user inputs /delete <int>
+    if len(strings) == 1 and strings[0].isnumeric():
+        # get the name of the task from the rows and delete it from the todolist db
+
+        rows = get_arr_of_tasks(chat_id)
+        try:
+            taskName = rows[int(strings[0]) - 1]
+        except IndexError:
+            update.message.reply_text("❌ Index is not in your to-do list.")
+            return
+
+    else:  # input is /delete <name of task>
+        taskName = ' '.join(strings)
+
+    conn = sqlite3.connect('dbs/todolist.db')
+    c = conn.cursor()
+    rc = c.execute("DELETE FROM todolist WHERE chatid='" + chat_id + "' AND task='" + taskName + "'").rowcount
+    conn.commit()
+    conn.close()
+
+    if rc <= 0:
+        update.message.reply_text("❌ Task was not found in your to-do list: " + taskName)
+    else:
+        update.message.reply_text("✔️ Task successfully deleted from your list: " + taskName + "\n")
+        show_list(update, context)
 
 
 @send_typing_action
@@ -210,10 +249,11 @@ def deleteall(update, context):
     c = conn.cursor()
     chat_id = str(update.message.chat_id)
 
-    rc = c.execute("DELETE FROM TODOLIST WHERE CHATID='" + chat_id + "'").rowcount
+    rc = c.execute("DELETE FROM todolist WHERE chatid='" + chat_id + "'").rowcount
 
     if rc != 0:
-        update.message.reply_text("All tasks have been removed.")
+        update.message.reply_text("All tasks have been deleted.")
+
     else:
         update.message.reply_text("Your to-do list is empty!")
     conn.commit()
@@ -221,22 +261,14 @@ def deleteall(update, context):
 
 
 def show_list(update, context):
-    # Connecting to the SQL database
-    conn = sqlite3.connect('dbs/todolist.db')
-    c = conn.cursor()
+    chat_id = str(update.message.chat_id)
 
-    chat_id = update.message.chat_id
-    chat_id = str(chat_id)
-
-    c.execute("SELECT TASK FROM TODOLIST WHERE CHATID='" + chat_id + "'")
-
-    rows = [i[0] for i in c.fetchall()]
-    conn.close()
+    rows = get_arr_of_tasks(chat_id)
 
     if len(rows) != 0:
         items = ""
-        for row in rows:
-            items += row + "\n"
+        for i in range(0, len(rows)):
+            items += str(i + 1) + ". " + rows[i] + "\n"
         update.message.reply_text("📄 " + update.message.from_user.first_name + "'s pending tasks:\n" + items)
     else:
         update.message.reply_text("Your to-do list is empty! (´･ω･`)")
@@ -285,13 +317,13 @@ def health(update, context):
         context.bot.send_sticker(chat_id=chat_id,
                                  sticker='CAACAgUAAxkBAAIC9GDInwJcjiituqnl1eBpBqq4hFbwAAL3AQACiPlJVvQMbOW7p78jHwQ',
                                  disable_notification=True)
-        text = "Extremely happy"
+        text = "Ecstatic"
     elif hp in range(1, 50):
         context.bot.send_sticker(chat_id=chat_id,
                                  sticker='CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ',
                                  disable_notification=True)
         text = "Sad"
-    elif hp in range(50, 101):
+    elif hp in range(50, 100):
         context.bot.send_sticker(chat_id=chat_id,
                                  sticker='CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E',
                                  disable_notification=True)
@@ -303,7 +335,21 @@ def health(update, context):
         text = "Pleased"
     conn.close()
 
-    update.message.reply_text("Meownace current mood: " + text)
+    update.message.reply_text("Mood: " + health_bar(hp) + "\n" + text)
+
+
+def health_bar(hp):
+    maxHP = 150
+    healthDashes = 15
+    dashConvert = int(maxHP / healthDashes)
+    currentDashes = int(hp / dashConvert)
+    remainingHealth = healthDashes - currentDashes
+
+    healthDisplay = '- ' * currentDashes
+    remainingDisplay = ' ' * remainingHealth
+    percent = str(int((hp / maxHP) * 100)) + "%"
+
+    return "| " + healthDisplay + remainingDisplay + "| " + percent
 
 
 def update_health(chat_id, hp):
@@ -311,16 +357,17 @@ def update_health(chat_id, hp):
     c = conn.cursor()
 
     # check range
-    newhp = c.execute("SELECT HP FROM USERS WHERE CHATID='" + chat_id + "'").fetchall()[0][0] + hp
+    newhp = c.execute("SELECT hp FROM users WHERE chatid='" + chat_id + "'").fetchall()[0][0] + hp
 
     print(newhp)
     if newhp > 150:
-        c.execute("UPDATE USERS SET HP = 150 WHERE CHATID='" + chat_id + "'")
+        c.execute("UPDATE users SET hp = 150 WHERE chatid='" + chat_id + "'")
     elif newhp < 0:
-        c.execute("UPDATE USERS SET HP = 0 WHERE CHATID = '" + chat_id + "'")
+        c.execute("UPDATE users SET hp = 0 WHERE chatid = '" + chat_id + "'")
     else:
         operator = "-" if hp < 0 else "+"
-        c.execute("UPDATE USERS SET HP = HP " + operator + " " + str(abs(hp)) + " WHERE CHATID = '" + chat_id + "'")
+        c.execute("UPDATE users SET hp = hp " + operator + " " + str(abs(hp)) + " WHERE chatid = '" + chat_id + "'")
+
     conn.commit()
     conn.close()
 
@@ -328,9 +375,22 @@ def update_health(chat_id, hp):
 """ Daily jobs """
 
 
+# Gradual HP loss every 2 hours.
+def loss(context):
+    # Deduct for all users
+    conn = sqlite3.connect("dbs/users.db")
+    c = conn.cursor()
+
+    chat_ids = [i[0] for i in c.execute("SELECT chatid FROM USERS")]
+
+    # Send message to all users
+    for chat_id in chat_ids:
+        update_health(chat_id, -1)
+
+
 # Morning message sent to every user.
 def morning(context):
-    message = "Good morning! It's a brand new day."
+    message = "☀ Good morning! It's a brand new day. ☀"
 
     # Send to everybody in the users db
     conn = sqlite3.connect("dbs/users.db")
@@ -349,20 +409,19 @@ def list_reminder(context):
     conn = sqlite3.connect("dbs/users.db")
     c = conn.cursor()
 
-    chat_ids = [i[0] for i in c.execute("SELECT CHATID FROM USERS")]
+    chat_ids = [i[0] for i in c.execute("SELECT chatid FROM USERS")]
 
     conn2 = sqlite3.connect('dbs/todolist.db')
     c2 = conn2.cursor()
 
     for chat_id in chat_ids:
-        c2.execute("SELECT TASK FROM TODOLIST WHERE CHATID='" + chat_id + "'")
+        c2.execute("SELECT task FROM todolist WHERE chatid='" + chat_id + "'")
         rows = [i[0] for i in c2.fetchall()]
+
         # Send message only if users has items left on to-do list
         if len(rows) != 0:
             context.bot.send_message(chat_id=chat_id, text="(。・・)ノ Reminder: You have " + str(
-                len(rows)) + " items remaining on your to-do list.")
-        else:
-            context.bot.send_message(chat_id=chat_id, text="Nothing")
+                len(rows)) + " item(s) remaining on your to-do list.")
 
     conn.close()
     conn2.close()
@@ -376,7 +435,6 @@ def daily_reset(context):
     conn2 = sqlite3.connect("dbs/todolist.db")
     c2 = conn2.cursor()
 
-    c.execute("SELECT CHATID FROM USERS")
     chat_ids = [i[0] for i in c.execute("SELECT CHATID FROM USERS")]
 
     for chat_id in chat_ids:
@@ -385,8 +443,8 @@ def daily_reset(context):
         rc = c2.execute("DELETE FROM TODOLIST WHERE CHATID='" + chat_id + "'").rowcount
 
         # Update report
-        message = "It's the end of the day! Here's your report:"
-        message += "\nYou have " + str(rc) + " items left in your to-do list."
+        message = "🌃 It's the end of the day! Here's your report:"
+        message += "\nYou have " + str(rc) + " item(s) left in your to-do list."
         if rc == 0:
             message += "\nGood job!"
         else:
@@ -395,12 +453,13 @@ def daily_reset(context):
         # For each item, deduct 10hp
         update_health(chat_id, rc * (-20))
 
-        message += "\nTo-do list cleared."
+        message += "\nTo-do list has been reset."
 
         context.bot.send_message(chat_id=chat_id, text=message)
 
-    conn2.commit()
-    conn.commit()
+        conn.commit()
+        conn2.commit()
+
     conn2.close()
     conn.close()
 
@@ -532,6 +591,9 @@ def changeNum(update, context):
 def changeDurDB(update, context):
     string = update.message.text
     username = update.message.from_user.username
+    if username is None:
+        username = update.message.from_user.first_name
+
     newString = string.removeprefix('set sprint duration to ')
     newString = newString[0:2]
     duration = int(newString)
@@ -616,6 +678,10 @@ def changeDurDB(update, context):
 def changeRestDB(update, context):
     string = update.message.text
     username = update.message.from_user.username
+
+    if username is None:
+        username = update.message.from_user.first_name
+
     string = string.removeprefix('set sprint rest to ')
     string = string.removesuffix(' min')
     restdur = int(string)
@@ -686,7 +752,8 @@ def changeRestDB(update, context):
                                   + dur + " minutes each ⌛\n"
                                   + rest + " minutes rest time in between 😌\n"
                                   + "\n" +
-                                  "Press 'i am done' -> 'settings ⚙' in the keyboard if you would like to change anything else!\n"
+                                  "Press 'i am done' -> 'settings ⚙' in the keyboard if you would like to change "
+                                  "anything else!\n "
                                   + "If you are ready to begin your sprint, press 'i am done' -> 'start sprint'")
     except sqlite3.Error as error:
         print("Failed to update sqlite table", error)
@@ -700,6 +767,9 @@ def changeRestDB(update, context):
 def changeNumDB(update, context):
     string = update.message.text
     username = update.message.from_user.username
+
+    if username is None:
+        username = update.message.from_user.first_name
     newString = string.removeprefix('set number of pomodoros to ')
     number = int(newString)
     print(number)
@@ -834,12 +904,12 @@ def startSprint(update, context):
                               + "\n" + "Press stop sprint to stop sprint. ")
     restRest = rest
     durDur = dur
-    while (n > 0):
+    while n > 0:
         context.job_queue.run_once(callback_alarm_duration, durDur, context=chat_id, name=str(chat_id))
         restRest = restRest + dur + rest
-        if (n != 1):
+        if n != 1:
             context.job_queue.run_once(callback_alarm_rest, restRest, context=chat_id, name=str(chat_id))
-        if (n == 1):
+        if n == 1:
             context.job_queue.run_once(callback_alarm_last, restRest, context=chat_id, name=str(chat_id))
         durDur = durDur + rest + dur
         n = n - 1
@@ -1026,11 +1096,11 @@ def stopSprint(update, context):
 # Non-commands
 
 def manage_text(update, context):
-    update.message.reply_text("Sorry, Meownace does not understand. Press /help for more info")
+    update.message.reply_text("Meownace does not understand! Use /help for more information")
 
 
 def manage_command(update, context):
-    update.message.reply_text("Meownace does not recognise that command. Press /help for more info")
+    update.message.reply_text("Meownace does not recognise that command. Use /help for more information")
 
 
 def error(update, context):
@@ -1053,10 +1123,10 @@ def main():
     dp.add_handler(CommandHandler('help', help))
 
     # TO-DO list
-    dp.add_handler(CommandHandler('addtask', addtask))
-    dp.add_handler(CommandHandler('cleartask', cleartask))
+    dp.add_handler(CommandHandler('add', addtask))
+    dp.add_handler(CommandHandler('clear', cleartask))
     dp.add_handler(CommandHandler('clearall', clearall))
-    dp.add_handler(CommandHandler('deletetask', deletetask))
+    dp.add_handler(CommandHandler('delete', deletetask))
     dp.add_handler(CommandHandler('deleteall', deleteall))
     dp.add_handler(CommandHandler('list', show_list))
 
@@ -1076,8 +1146,6 @@ def main():
 
     # Alarm
     dp.add_handler(CallbackQueryHandler(call_back, pass_job_queue=True))
-    # dp.add_handler(CommandHandler("set", set_timer))
-    # dp.add_handler(CommandHandler("unset", unset, pass_chat_data=True))
     dp.add_handler(CommandHandler("timer", timer))
     dp.add_handler(MessageHandler(filter_settimer, set_timer))
     dp.add_handler(MessageHandler(filter_settingsTimer, settings_timer))
@@ -1092,8 +1160,6 @@ def main():
     dp.add_handler(MessageHandler(FilterSprintDuration(), changeDurDB))
     dp.add_handler(MessageHandler(FilterSprintRest(), changeRestDB))
     dp.add_handler(MessageHandler(FilterSprintNumber(), changeNumDB))
-    # Cat fact
-    dp.add_handler(CommandHandler('catfact', cat))
 
     # Non-commands
     dp.add_handler(MessageHandler(Filters.text, manage_text))
@@ -1109,14 +1175,15 @@ def main():
 
     # Daily reset
     job_reset = j.run_daily(daily_reset, days=(0, 1, 2, 3, 4, 5, 6),
-                            time=datetime.time(hour=23, minute=59, second=00,
+                            time=datetime.time(hour=11, minute=59, second=0,
                                                tzinfo=pytz.timezone("Asia/Singapore")))
 
-    # job_daily.run(dp)
-
     job_reminder = j.run_daily(list_reminder, days=(0, 1, 2, 3, 4, 5, 6),
-                               time=datetime.time(hour=12 + 6, minute=30, second=59,
+                               time=datetime.time(hour=12 + 6, minute=30, second=00,
                                                   tzinfo=pytz.timezone("Asia/Singapore")))
+
+    job_loss = j.run_repeating(loss, datetime.timedelta(hours=2))
+
     # Start the Bot
     updater.start_polling()
 
@@ -1125,8 +1192,7 @@ def main():
 
 
 if __name__ == '__main__':
-    bot_token = "TOKEN"
-
+    bot_token = "token"
     endpoint = f"https://api.telegram.org/bot{bot_token}/getUpdates"
     response = requests.get(endpoint)
     print(response.text)
