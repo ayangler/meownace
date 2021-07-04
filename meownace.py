@@ -3,6 +3,7 @@ from functools import wraps
 import datetime, pytz, requests
 
 import logging
+import random
 from telegram import ChatAction, ParseMode, ForceReply
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
@@ -43,14 +44,16 @@ def start(update, context):
     c = conn.cursor()
 
     chat_id = str(update.message.chat_id)
+
     username = update.message.from_user.username
     if username is None:
         username = update.message.from_user.first_name
 
-    # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
+    # Check existence of user in database.
     if c.execute("SELECT 1 FROM USERS WHERE CHATID='" + chat_id + "'").fetchone():
-        print("User is already recorded in db")
+        print("User has already been added to user database")
     else:
+        print("Adding user " + username + " to user database")
         c.execute("INSERT INTO USERS VALUES('" + chat_id + "','" + username + "'," + "75)")
 
     conn.commit()
@@ -63,9 +66,6 @@ def start(update, context):
 @send_typing_action
 def help(update, context):
     """Send a message when the command /help is issued."""
-    # context.bot.send_sticker(chat_id=update.effective_chat.id,
-    #                         sticker='CAACAgUAAxkBAAIDIGDIorsZlJg8jeZHgmnO8wjZgLCjAAKLAgACY3BIVrN-6y3Hce4eHwQ',
-    #                         disable_notification=True)
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='Meownace is here to help! ヾ(•ω•`)o\n'
                                   'Use the commands shown below to interact with me:\n\n'
@@ -119,7 +119,7 @@ def addtask(update, context):
         else:
             c.execute("INSERT INTO TODOLIST VALUES('" + chat_id + "','" + task + "','" + username + "')")
 
-            message = "Added to to-do list!"
+            message = "Added to to-do list."
 
         conn.commit()
         conn.close()
@@ -160,7 +160,7 @@ def cleartask(update, context):
         try:
             taskName = rows[int(strings[0]) - 1]
         except IndexError:
-            update.message.reply_text("❌ Index is not in your to-do list.")
+            update.message.reply_text("❗ Index is not in your to-do list.")
             return
 
     else:  # input is /clear <name of task>
@@ -187,7 +187,7 @@ def clearall(update, context):
     c = conn.cursor()
     chat_id = str(update.message.chat_id)
 
-    rc = c.execute("DELETE FROM TODOLIST WHERE CHATID='" + chat_id + "'").rowcount
+    rc = c.execute("DELETE FROM todolist WHERE chatid='" + chat_id + "'").rowcount
 
     if rc != 0:
         conn.commit()
@@ -232,7 +232,7 @@ def deletetask(update, context):
     if rc <= 0:
         update.message.reply_text("❌ Task was not found in your to-do list: " + taskName)
     else:
-        update.message.reply_text("✔️ Task successfully deleted from your list: " + taskName + "\n")
+        update.message.reply_text("✔Task successfully deleted from your list: " + taskName)
         show_list(update, context)
 
 
@@ -248,7 +248,8 @@ def deleteall(update, context):
         update.message.reply_text("All tasks have been deleted.")
 
     else:
-        update.message.reply_text("Your to-do list is empty!")
+        update.message.reply_text("Your to-do list is empty.")
+
     conn.commit()
     conn.close()
 
@@ -260,9 +261,9 @@ def show_list(update, context):
 
     if len(rows) != 0:
         items = ""
-        for i in range(0, len(rows)):
-            items += str(i + 1) + ". " + rows[i] + "\n"
-        update.message.reply_text("📄 " + update.message.from_user.first_name + "'s pending tasks:\n" + items)
+        for count, task in enumerate(rows, 1):
+            items += "{0}. {1}\n".format(str(count), task)
+        update.message.reply_text("📄 " + update.message.from_user.first_name + "'s tasks:\n" + items)
     else:
         update.message.reply_text("Your to-do list is empty! (´･ω･`)")
 
@@ -290,6 +291,43 @@ def walk(update, context):
 """ Pet's health """
 
 
+def get_hp_sticker(hp):
+    """ RANGES:
+    0 Very upset
+    1 - 29 Disappointed
+    30 - 59 Sad
+    60 - 89 Neutral
+    90 - 119 Pleased
+    120 - 149 Joyous
+    150 Ecstatic
+    """
+
+    very_upset = ['CAACAgUAAxkBAAIDGGDIoZZSasZYD4_yGP8ZRxLEove7AAJ-AgACl2dAVmhgDWxdCb2CHwQ']
+    disappointed = ['CAACAgUAAxkBAAIF7mDhV_rQ-cwa1yfRXqoWwPD0JY2xAAKLAgACY3BIVrN-6y3Hce4eIAQ']  # PLACEHOLDER
+    sad = ['CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ']
+    neutral = ['CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E']
+    pleased = ['CAACAgUAAxkBAAIF7mDhV_rQ-cwa1yfRXqoWwPD0JY2xAAKLAgACY3BIVrN-6y3Hce4eIAQ']  # PLACEHOLDER
+    joyous = ['CAACAgUAAxkBAAIC7mDInlmoxvXO3UsXy6PLzpyngPXQAALpAgACZk5JVq9UssuYYljOHwQ']
+    ecstatic = ['CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ']
+
+    if hp == 0:
+        return random.choice(very_upset), "Very upset"
+    elif hp in range(1, 30):
+        return random.choice(disappointed), "Disappointed"
+    elif hp in range(30, 60):
+        return random.choice(sad), "Sad"
+    elif hp in range(60, 90):
+        return random.choice(neutral), "Neutral"
+    elif hp in range(90, 120):
+        return random.choice(pleased), "Pleased"
+    elif hp in range(120, 150):
+        return random.choice(joyous), "Joyous"
+    elif hp == 150:
+        return random.choice(ecstatic), "Ecstatic"
+    else:
+        return "Error in get_hp_sticker"
+
+
 @send_typing_action
 def health(update, context):
     """ report current health of pet """
@@ -299,36 +337,15 @@ def health(update, context):
     chat_id = update.message.chat_id
     chat_id = str(chat_id)
 
-    hp = c.execute("SELECT HP FROM USERS WHERE CHATID='" + chat_id + "'").fetchall()[0][0]
+    hp = c.execute("SELECT hp FROM users WHERE chatid='" + chat_id + "'").fetchall()[0][0]
 
-    if hp == 0:
-        context.bot.send_sticker(chat_id=chat_id,
-                                 sticker='CAACAgUAAxkBAAIDGGDIoZZSasZYD4_yGP8ZRxLEove7AAJ-AgACl2dAVmhgDWxdCb2CHwQ',
-                                 disable_notification=True)
-        text = "Very upset"
-    elif hp == 150:
-        context.bot.send_sticker(chat_id=chat_id,
-                                 sticker='CAACAgUAAxkBAAIC9GDInwJcjiituqnl1eBpBqq4hFbwAAL3AQACiPlJVvQMbOW7p78jHwQ',
-                                 disable_notification=True)
-        text = "Ecstatic"
-    elif hp in range(1, 50):
-        context.bot.send_sticker(chat_id=chat_id,
-                                 sticker='CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ',
-                                 disable_notification=True)
-        text = "Sad"
-    elif hp in range(50, 100):
-        context.bot.send_sticker(chat_id=chat_id,
-                                 sticker='CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E',
-                                 disable_notification=True)
-        text = "Neutral"
-    else:
-        context.bot.send_sticker(chat_id=chat_id,
-                                 sticker='CAACAgUAAxkBAAIC7mDInlmoxvXO3UsXy6PLzpyngPXQAALpAgACZk5JVq9UssuYYljOHwQ',
-                                 disable_notification=True)
-        text = "Pleased"
+    sticker_url, text = get_hp_sticker(hp)
+
+    context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
+
     conn.close()
 
-    update.message.reply_text("Mood: " + health_bar(hp) + "\n" + text)
+    update.message.reply_text(health_bar(hp) + "\nMood: " + text)
 
 
 def health_bar(hp):
@@ -368,7 +385,7 @@ def update_health(chat_id, hp):
 """ Daily jobs """
 
 
-# Gradual HP loss every 2 hours.
+# Gradual HP loss.
 def loss(context):
     # Deduct for all users
     conn = sqlite3.connect("dbs/users.db")
@@ -389,7 +406,7 @@ def morning(context):
     conn = sqlite3.connect("dbs/users.db")
     c = conn.cursor()
 
-    chat_ids = [i[0] for i in c.execute("SELECT CHATID FROM USERS")]
+    chat_ids = [i[0] for i in c.execute("SELECT chatid FROM users")]
 
     # Send message to all users
     for chat_id in chat_ids:
@@ -402,7 +419,7 @@ def list_reminder(context):
     conn = sqlite3.connect("dbs/users.db")
     c = conn.cursor()
 
-    chat_ids = [i[0] for i in c.execute("SELECT chatid FROM USERS")]
+    chat_ids = [i[0] for i in c.execute("SELECT chatid FROM users")]
 
     conn2 = sqlite3.connect('dbs/todolist.db')
     c2 = conn2.cursor()
@@ -428,12 +445,12 @@ def daily_reset(context):
     conn2 = sqlite3.connect("dbs/todolist.db")
     c2 = conn2.cursor()
 
-    chat_ids = [i[0] for i in c.execute("SELECT CHATID FROM USERS")]
+    chat_ids = [i[0] for i in c.execute("SELECT chatid FROM USERS")]
 
     for chat_id in chat_ids:
         # Get the number of items left inside the user's todolist
 
-        rc = c2.execute("DELETE FROM TODOLIST WHERE CHATID='" + chat_id + "'").rowcount
+        rc = c2.execute("DELETE FROM todolist WHERE chatid='" + chat_id + "'").rowcount
 
         # Update report
         message = "🌃 It's the end of the day! Here's your report:"
@@ -779,7 +796,7 @@ def changeNumDB(update, context):
         c.execute(selectQuery, (chat_id,))
         record = c.fetchone()
         # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-        if (record != None):
+        if record != None:
             print("User is already recorded in db")
         else:
             insert_query = """INSERT INTO SPRINT
@@ -1175,7 +1192,7 @@ def main():
                                time=datetime.time(hour=12 + 6, minute=30, second=00,
                                                   tzinfo=pytz.timezone("Asia/Singapore")))
 
-    job_loss = j.run_repeating(loss, datetime.timedelta(hours=2))
+    job_loss = j.run_repeating(loss, datetime.timedelta(minutes=30))
 
     # Start the Bot
     updater.start_polling()
