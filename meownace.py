@@ -36,7 +36,7 @@ def start(update, context):
         update.message.from_user.first_name) + '! 🐈' + '\nUse /help for the list of commands.\n'
 
     context.bot.send_animation(chat_id=update.message.chat_id,
-                               animation="https://i.imgur.com/caRzRKD.gif",
+                               animation="https://drive.google.com/uc?id=1nLF29bydx6ldz2i-4-FvMy2YEb8eFGsl",
                                caption=text)
 
     # Connect to the SQL db.
@@ -51,7 +51,7 @@ def start(update, context):
 
     # Check existence of user in database.
     if c.execute("SELECT 1 FROM USERS WHERE CHATID='" + chat_id + "'").fetchone():
-        print("User has already been added to user database")
+        print(username + " has already been added to user database")
     else:
         print("Adding user " + username + " to user database")
         c.execute("INSERT INTO USERS VALUES('" + chat_id + "','" + username + "'," + "75)")
@@ -82,6 +82,7 @@ def help(update, context):
                                   '/timer - choose your desired timer settings\n\n'
                                   ' 🧸 PET FUNCTIONS 🧸\n'
                                   '/health - how am i feeling right now? \n'
+                                  '/feed - gimme food \n'
                                   '/pat - gimme head pats \n'
                                   '/walk - take me on a walk \n'
                                   '/inspirational - ready to be inspired? [WIP]\n'
@@ -276,7 +277,7 @@ def pat(update, context):
     update_health(str(update.message.chat_id), 1)
     # context.bot.send_sticker(chat_id = chat_id, sticker =
     # "CAACAgUAAxkBAAIBfmC9zdWSIGzwSFuGfbY2-DaM27eUAAJyAAOw6HQBc5yhV2DYgA0fBA", disable_notification = True)
-    update.message.reply_text("You gave meownace a pat on the head! +hp")
+    update.message.reply_text("You gave meownace a pat on the head! +HP")
 
 
 @send_typing_action
@@ -285,7 +286,25 @@ def walk(update, context):
     # context.bot.send_sticker(chat_id = chat_id, sticker =
     # "CAACAgUAAxkBAAIBfmC9zdWSIGzwSFuGfbY2-DaM27eUAAJyAAOw6HQBc5yhV2DYgA0fBA", disable_notification = True)
 
-    update.message.reply_text("You took meownace on a walk! +hp")
+    update.message.reply_text("You took meownace on a walk! +HP")
+
+
+def feed(update, context):
+    chat_id = str(update.message.chat_id)
+
+    update_health(str(update.message.chat_id), 1)
+    stickers = {"Meownace steals your pancakes! +HP"
+                : 'CAACAgUAAxkBAAIGH2Diesw7Pxzl4QABUDjvQsVce9mqOAACxQIAAnD6EFcshnCaDQ15cSAE',
+                "You are what you eat?? +HP"
+                : 'CAACAgUAAxkBAAIGIGDiewbyD63n7UL6hmOZQqY7ULIhAAKLAgACY3BIVrN-6y3Hce4eIAQ',
+                "You hand Meownace cup noodles! +HP"
+                : 'CAACAgUAAxkBAAIGIWDiezFutBJyu9bZLJY1LsqrRcLnAAKyBQACwP8RV_qdy9vdg_b1IAQ'}
+
+    text, sticker_url = random.choice(list(stickers.items()))
+
+    context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
+
+    update.message.reply_text(text)
 
 
 """ Pet's health """
@@ -302,7 +321,9 @@ def get_hp_sticker(hp):
     150 Ecstatic
     """
 
-    very_upset = ['CAACAgUAAxkBAAIDGGDIoZZSasZYD4_yGP8ZRxLEove7AAJ-AgACl2dAVmhgDWxdCb2CHwQ']
+    very_upset = ['CAACAgUAAxkBAAIDGGDIoZZSasZYD4_yGP8ZRxLEove7AAJ-AgACl2dAVmhgDWxdCb2CHwQ',
+                  'CAACAgUAAxkBAAIGD2DieDNLQjNqKhHtociB4EVpsEWKAAJuAwACgCoQV-ROFcSaCxD9IAQ',
+                  'CAACAgUAAxkBAAIGEGDieGMvgs-8Hnq7iMdNSMKy_2QtAALiAwACn7oRV_UcNch5tNKhIAQ']
     disappointed = ['CAACAgUAAxkBAAIF7mDhV_rQ-cwa1yfRXqoWwPD0JY2xAAKLAgACY3BIVrN-6y3Hce4eIAQ']  # PLACEHOLDER
     sad = ['CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ']
     neutral = ['CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E']
@@ -453,18 +474,20 @@ def daily_reset(context):
         rc = c2.execute("DELETE FROM todolist WHERE chatid='" + chat_id + "'").rowcount
 
         # Update report
-        message = "🌃 It's the end of the day! Here's your report:"
-        message += "\nYou have " + str(rc) + " item(s) left in your to-do list."
+        message = "🌙 It's the end of the day! Here's your report:"
+        message += "\n🔖 You have " + str(rc) + " item(s) left in your to-do list."
         if rc == 0:
-            message += "\nGood job!"
+            message += "\n💖 Good job!"
         else:
-            message += "\nHp lost!"
+            message += " -HP"
+            message += "\n❗ To-do list has been cleared."
 
         # For each item, deduct 10hp
         update_health(chat_id, rc * (-20))
 
-        message += "\nTo-do list has been reset."
+        sleep_sticker = 'CAACAgUAAxkBAAIGEWDieI8dC2eHsy0yDxROBXvQvbTPAAJhAwACc8EIV_ToZnIn-TSkIAQ'
 
+        context.bot.send_sticker(chat_id=chat_id, sticker=sleep_sticker, disable_notification=True)
         context.bot.send_message(chat_id=chat_id, text=message)
 
         conn.commit()
@@ -621,7 +644,7 @@ def changeDurDB(update, context):
         c.execute(selectQuery, (chat_id,))
         record = c.fetchone()
         # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-        if (record != None):
+        if record is not None:
             print("User is already recorded in db")
         else:
             insert_query = """INSERT INTO SPRINT
@@ -674,7 +697,8 @@ def changeDurDB(update, context):
                                   + dur + " minutes each ⌛\n"
                                   + rest + " minutes rest time in between 😌\n"
                                   + "\n" +
-                                  "Press 'i am done' -> '⚙ sprint settings' in the keyboard if you would like to change anything else!\n"
+                                  "Press 'i am done' -> '⚙ sprint settings' in the keyboard if you would like to "
+                                  "change anything else!\n "
                                   + "If you are ready to begin your sprint, press 'i am done' -> 'start sprint'")
     except sqlite3.Error as error:
         print("Failed to update sqlite table", error)
@@ -709,7 +733,7 @@ def changeRestDB(update, context):
         c.execute(selectQuery, (chat_id,))
         record = c.fetchone()
         # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-        if (record != None):
+        if record is not None:
             print("User is already recorded in db")
         else:
             insert_query = """INSERT INTO SPRINT
@@ -796,7 +820,7 @@ def changeNumDB(update, context):
         c.execute(selectQuery, (chat_id,))
         record = c.fetchone()
         # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-        if record != None:
+        if record is not None:
             print("User is already recorded in db")
         else:
             insert_query = """INSERT INTO SPRINT
@@ -868,7 +892,7 @@ def startSprint(update, context):
     c.execute(selectQuery, (chat_id,))
     record = c.fetchone()
     # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-    if (record != None):
+    if record is not None:
         print("User is already recorded in db")
     else:
         insert_query = """INSERT INTO SPRINT
@@ -1143,6 +1167,7 @@ def main():
     # Interaction
     dp.add_handler(CommandHandler('pat', pat))
     dp.add_handler(CommandHandler('walk', walk))
+    dp.add_handler(CommandHandler('feed', feed))
 
     # HP
     dp.add_handler(CommandHandler('health', health))
@@ -1185,7 +1210,7 @@ def main():
 
     # Daily reset
     job_reset = j.run_daily(daily_reset, days=(0, 1, 2, 3, 4, 5, 6),
-                            time=datetime.time(hour=23, minute=59, second=0,
+                            time=datetime.time(hour=11, minute=52, second=0,
                                                tzinfo=pytz.timezone("Asia/Singapore")))
 
     job_reminder = j.run_daily(list_reminder, days=(0, 1, 2, 3, 4, 5, 6),
