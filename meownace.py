@@ -1,6 +1,7 @@
 import sqlite3
 from functools import wraps
 import datetime, pytz, requests
+from json import loads
 
 import logging
 import random
@@ -85,7 +86,7 @@ def help(update, context):
                                   '/feed - gimme food \n'
                                   '/pat - gimme head pats \n'
                                   '/walk - take me on a walk \n'
-                                  '/inspirational - ready to be inspired? [WIP]\n'
+                                  '/inspirational - get inspired \n'
                                   '/catfact - learn more about my species \n'
                                   '/pic - get cute cat pics [WIP]\n')
 
@@ -416,12 +417,13 @@ def loss(context):
 
     # Send message to all users
     for chat_id in chat_ids:
-        update_health(chat_id, -1)
+        update_health(chat_id, -1);
 
 
 # Morning message sent to every user.
 def morning(context):
-    message = "☀ Good morning! It's a brand new day. ☀"
+    sticker_url = 'CAACAgUAAxkBAAIGxmDipapfXSTyJed2Yz1G5XFRt_RgAAI0AwACDyIZVyCVvC54P3gfIAQ'
+    message = "☀ Good morning! It's a brand new day."
 
     # Send to everybody in the users db
     conn = sqlite3.connect("dbs/users.db")
@@ -431,6 +433,7 @@ def morning(context):
 
     # Send message to all users
     for chat_id in chat_ids:
+        context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
         context.bot.send_message(chat_id=chat_id, text=message)
 
 
@@ -511,6 +514,15 @@ def get_cat_fact():
 # Cmd for cat fact
 def cat(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=get_cat_fact())
+
+
+def get_inspirational():
+    response = requests.get('http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en')
+    return '{quoteText} - {quoteAuthor}'.format(**loads(response.text))
+
+
+def inspirational(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text=get_inspirational())
 
 
 # STUDY TIMER
@@ -1179,6 +1191,9 @@ def main():
     # Cat fact
     dp.add_handler(CommandHandler('catfact', cat))
 
+    # Inspirational
+    dp.add_handler(CommandHandler('inspirational', inspirational))
+
     # Alarm
     dp.add_handler(CallbackQueryHandler(call_back, pass_job_queue=True))
     dp.add_handler(CommandHandler("timer", timer))
@@ -1206,7 +1221,7 @@ def main():
     # Morning message
     j = updater.job_queue
     job_morning = j.run_daily(morning, days=(0, 1, 2, 3, 4, 5, 6),
-                              time=datetime.time(hour=6, minute=00, second=00, tzinfo=pytz.timezone("Asia/Singapore")))
+                              time=datetime.time(hour=6, minute=00, second=30, tzinfo=pytz.timezone("Asia/Singapore")))
 
     # Daily reset
     job_reset = j.run_daily(daily_reset, days=(0, 1, 2, 3, 4, 5, 6),
