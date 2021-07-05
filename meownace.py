@@ -1210,7 +1210,7 @@ def main():
 
     # Daily reset
     job_reset = j.run_daily(daily_reset, days=(0, 1, 2, 3, 4, 5, 6),
-                            time=datetime.time(hour=11, minute=52, second=0,
+                            time=datetime.time(hour=23, minute=59, second=0,
                                                tzinfo=pytz.timezone("Asia/Singapore")))
 
     job_reminder = j.run_daily(list_reminder, days=(0, 1, 2, 3, 4, 5, 6),
