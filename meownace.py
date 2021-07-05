@@ -76,7 +76,7 @@ def help(update, context):
                                   '/delete <name of task> or <index> - remove a task \n'
                                   '/deleteall - remove all tasks\n'
                                   '/list - show all your tasks \n\n'
-                                  '🏫STUDY🏫\n'
+                                  '🏫 STUDY 🏫\n'
                                   '/set - set a timer\n'
                                   '/unset - remove an existing timer \n'
                                   '/timer - choose your desired timer settings\n\n'
@@ -327,9 +327,9 @@ def get_hp_sticker(hp):
     disappointed = ['CAACAgUAAxkBAAIF7mDhV_rQ-cwa1yfRXqoWwPD0JY2xAAKLAgACY3BIVrN-6y3Hce4eIAQ']  # PLACEHOLDER
     sad = ['CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ']
     neutral = ['CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E']
-    pleased = ['CAACAgUAAxkBAAIF7mDhV_rQ-cwa1yfRXqoWwPD0JY2xAAKLAgACY3BIVrN-6y3Hce4eIAQ']  # PLACEHOLDER
-    joyous = ['CAACAgUAAxkBAAIC7mDInlmoxvXO3UsXy6PLzpyngPXQAALpAgACZk5JVq9UssuYYljOHwQ']
-    ecstatic = ['CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ']
+    pleased = ['CAACAgUAAxkBAAIC7mDInlmoxvXO3UsXy6PLzpyngPXQAALpAgACZk5JVq9UssuYYljOHwQ']
+    joyous = ['CAACAgUAAxkBAAIF7mDhV_rQ-cwa1yfRXqoWwPD0JY2xAAKLAgACY3BIVrN-6y3Hce4eIAQ']  # PLACEHOLDER
+    ecstatic = ['CAACAgUAAxkBAAIGsGDinDNXbpVnt8zSQWJlBwq3E1iZAAL3AQACiPlJVvQMbOW7p78jIAQ']
 
     if hp == 0:
         return random.choice(very_upset), "Very upset"
