@@ -33,11 +33,11 @@ def send_typing_action(func):
 def start(update, context):
     """Send a message when the command /start is issued."""
 
-    text = '🐈 Welcome to meownace, ' + str(
-        update.message.from_user.first_name) + '! 🐈' + '\nUse /help for the list of commands.\n'
+    text = '(oﾟvﾟ)ノ Welcome to Meownace, ' + str(
+        update.message.from_user.first_name) + '!' + '\nUse /help for the list of commands.\n'
 
     context.bot.send_animation(chat_id=update.message.chat_id,
-                               animation="https://drive.google.com/uc?id=1nLF29bydx6ldz2i-4-FvMy2YEb8eFGsl",
+                               animation="https://drive.google.com/uc?id=1PJ4yPTXLp8QiCS7RWOiEJZnDLCC95Up8",
                                caption=text)
 
     # Connect to the SQL db.
@@ -70,6 +70,9 @@ def help(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='Meownace is here to help! ヾ(•ω•`)o\n'
                                   'Use the commands shown below to interact with me:\n\n'
+                                  '⚙ BOT ⚙\n'
+                                  '/start - view the start screen\n'
+                                  '/about - about the developers\n\n'
                                   ' 📅 TODO 📅\n'
                                   '/add <name of task> - add a task \n'
                                   '/clear <name of task> or <index> - remove a finished task \n'
@@ -89,6 +92,18 @@ def help(update, context):
                                   '/inspirational - get inspired \n'
                                   '/catfact - learn more about my species \n'
                                   '/pic - get cute cat pics [WIP]\n')
+
+
+""" About us """
+
+
+@send_typing_action
+def about(update, context):
+    message = "Created by Team Meownace for NUS Orbital 2021 ( •̀ ω •́ )✧"
+
+    context.bot.send_animation(chat_id=update.message.chat_id,
+                               animation="https://drive.google.com/uc?id=1KphsQjQZz_rhgSb61K0rDmwpdmKvhc_J",
+                               caption=message)
 
 
 """ To-do functionality """
@@ -178,7 +193,7 @@ def cleartask(update, context):
         update.message.reply_text("❌ Task was not found in your to-do list: " + taskName)
     else:
         update_health(chat_id, 10)
-        update.message.reply_text("✔Task successfully cleared from your list: " + taskName + "\n+hp!")
+        update.message.reply_text("✔Task successfully cleared from your list: " + taskName + "\n+HP")
 
         show_list(update, context)
 
@@ -325,12 +340,15 @@ def get_hp_sticker(hp):
     very_upset = ['CAACAgUAAxkBAAIDGGDIoZZSasZYD4_yGP8ZRxLEove7AAJ-AgACl2dAVmhgDWxdCb2CHwQ',
                   'CAACAgUAAxkBAAIGD2DieDNLQjNqKhHtociB4EVpsEWKAAJuAwACgCoQV-ROFcSaCxD9IAQ',
                   'CAACAgUAAxkBAAIGEGDieGMvgs-8Hnq7iMdNSMKy_2QtAALiAwACn7oRV_UcNch5tNKhIAQ']
-    disappointed = ['CAACAgUAAxkBAAIF7mDhV_rQ-cwa1yfRXqoWwPD0JY2xAAKLAgACY3BIVrN-6y3Hce4eIAQ']  # PLACEHOLDER
+    disappointed = ['CAACAgUAAxkBAAIIAmDlXNXdOYIzM6dVkFbLJguFcLlvAAKxAgACWp0pV3mOuTdcqCX9IAQ']
     sad = ['CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ']
-    neutral = ['CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E']
+    neutral = ['CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E',
+               'CAACAgUAAxkBAAIIE2DlY9kWmoa4pet70SzL8brgFvUQAAKnAgACoXcpVzCFwQjfFP6bIAQ']
     pleased = ['CAACAgUAAxkBAAIC7mDInlmoxvXO3UsXy6PLzpyngPXQAALpAgACZk5JVq9UssuYYljOHwQ']
-    joyous = ['CAACAgUAAxkBAAIF7mDhV_rQ-cwa1yfRXqoWwPD0JY2xAAKLAgACY3BIVrN-6y3Hce4eIAQ']  # PLACEHOLDER
-    ecstatic = ['CAACAgUAAxkBAAIGsGDinDNXbpVnt8zSQWJlBwq3E1iZAAL3AQACiPlJVvQMbOW7p78jIAQ']
+    joyous = ['CAACAgUAAxkBAAIIAWDlXLktls_J9Z2mk38EMz2zgOilAAIRAwAC9p8xV2FvIH-UrVdVIAQ']
+    ecstatic = ['CAACAgUAAxkBAAIIcmDlZ2yVVMAVzN2Rlxhn4seroWR3AAJMAgACxRExVyn-qYg11FplIAQ',
+                'CAACAgUAAxkBAAIIFGDlY_XfzjPs_L2BMPWJnYyx8RS3AAIJAwAC3PAxVzjLZzYahql5IAQ',
+                'CAACAgUAAxkBAAIIFWDlZAG9gUvwb5cJcCcAAbSMkDrLgQAC-QIAAiwZKFeN8WKu-P1klSAE']
 
     if hp == 0:
         return random.choice(very_upset), "Very upset"
@@ -365,6 +383,7 @@ def health(update, context):
 
     context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
 
+
     conn.close()
 
     update.message.reply_text(health_bar(hp) + "\nMood: " + text)
@@ -378,7 +397,7 @@ def health_bar(hp):
     remainingHealth = healthDashes - currentDashes
 
     healthDisplay = '- ' * currentDashes
-    remainingDisplay = ' ' * remainingHealth
+    remainingDisplay = '  ' * remainingHealth
     percent = str(int((hp / maxHP) * 100)) + "%"
 
     return "| " + healthDisplay + remainingDisplay + "| " + percent
@@ -417,7 +436,7 @@ def loss(context):
 
     # Send message to all users
     for chat_id in chat_ids:
-        update_health(chat_id, -1);
+        update_health(chat_id, -1)
 
 
 # Morning message sent to every user.
@@ -440,6 +459,7 @@ def morning(context):
 # To-do list reminder, sends reminders if there are items remaining on the to-do list.
 
 def list_reminder(context):
+    sticker_url = 'CAACAgUAAxkBAAIIFmDlZCMBw6yYfKTntImNuRpVKQdZAAKzBQACoPkoV4iWYNQQxMDEIAQ'
     conn = sqlite3.connect("dbs/users.db")
     c = conn.cursor()
 
@@ -454,8 +474,10 @@ def list_reminder(context):
 
         # Send message only if users has items left on to-do list
         if len(rows) != 0:
+            context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
+
             context.bot.send_message(chat_id=chat_id, text="(。・・)ノ Reminder: You have " + str(
-                len(rows)) + " item(s) remaining on your to-do list.")
+                len(rows)) + " item(s) left on your to-do list.")
 
     conn.close()
     conn2.close()
@@ -555,7 +577,7 @@ def timer(update, context):
         ['⚙ sprint settings'],
         ['stop sprint!'],
     ]
-    update.message.reply_text(text="Welcome to Meownace's timer~ Please select options below! (Note: although the "
+    update.message.reply_text(text="Welcome to Meownace's timer! Please select options below.\n(Note: although the "
                                    "buttons are listed in minutes, the actual timings have been changed to seconds "
                                    "for easier testing. Eg: Button that says 15min will last 15s!)",
                               reply_markup=ReplyKeyboardMarkup(keyboard))
@@ -703,8 +725,7 @@ def changeDurDB(update, context):
         dur = str(record[1])
         rest = str(record[2])
         num = str(record[3])
-        update.message.reply_text("Hi " + username + "!~ \n"
-                                  + "Sprint settings have been saved successfully. Your sprint consists of:\n"
+        update.message.reply_text("Sprint settings have been saved successfully. Your sprint consists of:\n"
                                   + num + " pomodoros 🍅\n"
                                   + dur + " minutes each ⌛\n"
                                   + rest + " minutes rest time in between 😌\n"
@@ -792,8 +813,7 @@ def changeRestDB(update, context):
         dur = str(record[1])
         rest = str(record[2])
         num = str(record[3])
-        update.message.reply_text("Hi " + username + "!~ \n"
-                                  + "Sprint settings have been saved successfully. Your sprint consists of:\n"
+        update.message.reply_text("Sprint settings have been saved successfully. Your sprint consists of:\n"
                                   + num + " pomodoros 🍅\n"
                                   + dur + " minutes each ⌛\n"
                                   + rest + " minutes rest time in between 😌\n"
@@ -879,8 +899,7 @@ def changeNumDB(update, context):
         dur = str(record[1])
         rest = str(record[2])
         num = str(record[3])
-        update.message.reply_text("Hi " + username + "!~ \n"
-                                  + "Sprint settings have been saved successfully. Your sprint consists of:\n"
+        update.message.reply_text("Sprint settings have been saved successfully. Your sprint consists of:\n"
                                   + num + " pomodoros 🍅\n"
                                   + dur + " minutes each ⌛\n"
                                   + rest + " minutes rest time in between 😌\n"
@@ -1167,6 +1186,7 @@ def main():
     # Commands
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(CommandHandler('help', help))
+    dp.add_handler(CommandHandler('about', about))
 
     # TO-DO list
     dp.add_handler(CommandHandler('add', addtask))
@@ -1221,7 +1241,7 @@ def main():
     # Morning message
     j = updater.job_queue
     job_morning = j.run_daily(morning, days=(0, 1, 2, 3, 4, 5, 6),
-                              time=datetime.time(hour=6, minute=00, second=30, tzinfo=pytz.timezone("Asia/Singapore")))
+                              time=datetime.time(hour=6, minute=00, second=00, tzinfo=pytz.timezone("Asia/Singapore")))
 
     # Daily reset
     job_reset = j.run_daily(daily_reset, days=(0, 1, 2, 3, 4, 5, 6),
