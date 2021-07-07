@@ -383,7 +383,6 @@ def health(update, context):
 
     context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
 
-
     conn.close()
 
     update.message.reply_text(health_bar(hp) + "\nMood: " + text)
@@ -547,8 +546,6 @@ def inspirational(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=get_inspirational())
 
 
-# STUDY TIMER
-# Send study timer alarm
 """ Timer """
 
 
@@ -654,6 +651,61 @@ def changeNum(update, context):
                               reply_markup=ReplyKeyboardMarkup(keyboard))
 
 
+# Adds the user to the sprint database with default values if they are not in the sprint database.
+
+def insert_new_user_sprint(chat_id):
+    # Connecting to the SQL database
+    conn = sqlite3.connect('dbs/sprint.db')
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM sprint WHERE id = " + chat_id)
+
+    record = c.fetchone()
+
+    if record is not None:
+        print("User is already in sprint DB")
+    else:
+        insert_query = """INSERT INTO SPRINT
+                      (ID, DURATION, REST, NUMBER) 
+                       VALUES 
+                      (?,?,?,?);"""
+        data_tuple = (chat_id, 30, 5, 5)
+        c.execute(insert_query, data_tuple)
+        conn.commit()
+
+        print("New user inserted successfully into SPRINT table ", c.rowcount)
+
+    conn.close()
+
+
+def update_sprint_table(query, data, chat_id):
+    conn = sqlite3.connect('dbs/sprint.db')
+    c = conn.cursor()
+
+    c.execute(query, (data, chat_id))
+    conn.commit()
+    print("Record Updated successfully.")
+    conn.close()
+
+
+# Returns a String of the user's sprint information
+def sprint_full_info(chat_id):
+    conn = sqlite3.connect('dbs/sprint.db')
+    c = conn.cursor()
+    c.execute("SELECT * from SPRINT where ID = " + chat_id)
+    chat_id, dur, rest, num = c.fetchone()
+
+    conn.close()
+
+    return "Sprint settings have been saved successfully. Your sprint consists of:\n" \
+           + str(num) + " pomodoros 🍅\n" \
+           + str(dur) + " minutes each ⌛\n" \
+           + str(rest) + " minutes rest time in between 😌\n\n" \
+           + "Press 'i am done' -> '⚙ sprint settings' in the keyboard if you would like to " \
+           + "change anything else!\n " \
+           + "If you are ready to begin your sprint, press 'i am done' -> 'start sprint'"
+
+
 # Change the duration for the sprint
 def changeDurDB(update, context):
     string = update.message.text
@@ -661,84 +713,18 @@ def changeDurDB(update, context):
     if username is None:
         username = update.message.from_user.first_name
 
-    newString = string.removeprefix('set sprint duration to ')
-    newString = newString[0:2]
+    newString = string.removeprefix('set sprint duration to ')[0:2]
     duration = int(newString)
-    print(duration)
-    chat_id = update.message.chat_id
-    chat_id = str(chat_id)
-    print(chat_id)
+    chat_id = str(update.message.chat_id)
 
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
+    print(duration, chat_id)
 
-        selectQuery = """SELECT * from SPRINT where ID = ?"""
-        c.execute(selectQuery, (chat_id,))
-        record = c.fetchone()
-        # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-        if record is not None:
-            print("User is already recorded in db")
-        else:
-            insert_query = """INSERT INTO SPRINT
-                          (ID, DURATION, REST, NUMBER) 
-                           VALUES 
-                          (?,?,?,?);"""
-            data_tuple = (chat_id, 30, 5, 5)
-            c.execute(insert_query, data_tuple)
-            conn.commit()
-            print("New user inserted successfully into SPRINT table ", c.rowcount)
-            c.close()
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
+    insert_new_user_sprint(chat_id)
 
-        updateQuery = """UPDATE SPRINT set DURATION=? where ID = ?"""
-        data = (duration, chat_id)
-        c.execute(updateQuery, data)
-        conn.commit()
-        print("Record Updated successfully ")
-        c.close()
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
+    updateQuery = "UPDATE sprint SET duration=? WHERE id=?"
+    update_sprint_table(updateQuery, duration, chat_id)
 
-        selectQuery = """SELECT * from SPRINT where ID = ?"""
-        c.execute(selectQuery, (chat_id,))
-        record = c.fetchone()
-        # Send user a message with the updated sprint duration
-        dur = str(record[1])
-        rest = str(record[2])
-        num = str(record[3])
-        update.message.reply_text("Sprint settings have been saved successfully. Your sprint consists of:\n"
-                                  + num + " pomodoros 🍅\n"
-                                  + dur + " minutes each ⌛\n"
-                                  + rest + " minutes rest time in between 😌\n"
-                                  + "\n" +
-                                  "Press 'i am done' -> '⚙ sprint settings' in the keyboard if you would like to "
-                                  "change anything else!\n "
-                                  + "If you are ready to begin your sprint, press 'i am done' -> 'start sprint'")
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
+    update.message.reply_text(sprint_full_info(chat_id))
 
 
 # Change the rest duration for sprint
@@ -751,82 +737,17 @@ def changeRestDB(update, context):
 
     string = string.removeprefix('set sprint rest to ')
     string = string.removesuffix(' min')
+
     restdur = int(string)
-    print(restdur)
-    chat_id = update.message.chat_id
-    chat_id = str(chat_id)
-    print(chat_id)
+    chat_id = str(update.message.chat_id)
+    print(restdur, chat_id)
 
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
+    insert_new_user_sprint(chat_id)
 
-        selectQuery = """SELECT * from SPRINT where ID = ?"""
-        c.execute(selectQuery, (chat_id,))
-        record = c.fetchone()
-        # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-        if record is not None:
-            print("User is already recorded in db")
-        else:
-            insert_query = """INSERT INTO SPRINT
-                          (ID, DURATION, REST, NUMBER) 
-                           VALUES 
-                          (?,?,?,?);"""
-            data_tuple = (chat_id, 30, 5, 5)
-            c.execute(insert_query, data_tuple)
-            conn.commit()
-            print("New user inserted successfully into SPRINT table ", c.rowcount)
-            c.close()
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
+    updateQuery = "UPDATE sprint SET rest=? WHERE id = ?"
+    update_sprint_table(updateQuery, restdur, chat_id)
 
-        updateQuery = """UPDATE SPRINT set REST=? where ID = ?"""
-        data = (restdur, chat_id)
-        c.execute(updateQuery, data)
-        conn.commit()
-        print("Record Updated successfully ")
-        c.close()
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
-
-        selectQuery = """SELECT * from SPRINT where ID = ?"""
-        c.execute(selectQuery, (chat_id,))
-        record = c.fetchone()
-        # Send user a message with the updated sprint duration
-        dur = str(record[1])
-        rest = str(record[2])
-        num = str(record[3])
-        update.message.reply_text("Sprint settings have been saved successfully. Your sprint consists of:\n"
-                                  + num + " pomodoros 🍅\n"
-                                  + dur + " minutes each ⌛\n"
-                                  + rest + " minutes rest time in between 😌\n"
-                                  + "\n" +
-                                  "Press 'i am done' -> 'settings ⚙' in the keyboard if you would like to change "
-                                  "anything else!\n "
-                                  + "If you are ready to begin your sprint, press 'i am done' -> 'start sprint'")
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
+    update.message.reply_text(sprint_full_info(chat_id))
 
 
 # Change the number of pomodoros for the sprint
@@ -836,128 +757,35 @@ def changeNumDB(update, context):
 
     if username is None:
         username = update.message.from_user.first_name
+
     newString = string.removeprefix('set number of pomodoros to ')
     number = int(newString)
-    print(number)
-    chat_id = update.message.chat_id
-    chat_id = str(chat_id)
-    print(chat_id)
+    chat_id = str(update.message.chat_id)
+    print(number, chat_id)
 
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
+    insert_new_user_sprint(chat_id)
 
-        selectQuery = """SELECT * from SPRINT where ID = ?"""
-        c.execute(selectQuery, (chat_id,))
-        record = c.fetchone()
-        # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-        if record is not None:
-            print("User is already recorded in db")
-        else:
-            insert_query = """INSERT INTO SPRINT
-                          (ID, DURATION, REST, NUMBER) 
-                           VALUES 
-                          (?,?,?,?);"""
-            data_tuple = (chat_id, 30, 5, 5)
-            c.execute(insert_query, data_tuple)
-            conn.commit()
-            print("New user inserted successfully into SPRINT table ", c.rowcount)
-            c.close()
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
+    updateQuery = """UPDATE sprint SET number=? WHERE id = ?"""
+    update_sprint_table(updateQuery, number, chat_id)
 
-        updateQuery = """UPDATE SPRINT set NUMBER=? where ID = ?"""
-        data = (number, chat_id)
-        c.execute(updateQuery, data)
-        conn.commit()
-        print("Record Updated successfully ")
-        c.close()
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
-
-        selectQuery = """SELECT * from SPRINT where ID = ?"""
-        c.execute(selectQuery, (chat_id,))
-        record = c.fetchone()
-        # Send user a message with the updated sprint duration
-        dur = str(record[1])
-        rest = str(record[2])
-        num = str(record[3])
-        update.message.reply_text("Sprint settings have been saved successfully. Your sprint consists of:\n"
-                                  + num + " pomodoros 🍅\n"
-                                  + dur + " minutes each ⌛\n"
-                                  + rest + " minutes rest time in between 😌\n"
-                                  + "\n" +
-                                  "Press 'i am done' -> '⚙ sprint settings' in the keyboard if you would like to change anything else!\n"
-                                  + "If you are ready to begin your sprint, press 'i am done' -> 'start sprint'")
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
+    update.message.reply_text(sprint_full_info(chat_id))
 
 
 def startSprint(update, context):
-    chat_id = update.message.chat_id
+    chat_id = str(update.message.chat_id)
+
     conn = sqlite3.connect('dbs/sprint.db')
     c = conn.cursor()
 
-    selectQuery = """SELECT * from SPRINT where ID = ?"""
+    insert_new_user_sprint(chat_id)
+
+    selectQuery = "SELECT * FROM sprint WHERE id = ?"
     c.execute(selectQuery, (chat_id,))
     record = c.fetchone()
-    # Check existence of user in database. If exists, do nothing, else add chatid and username to database.
-    if record is not None:
-        print("User is already recorded in db")
-    else:
-        insert_query = """INSERT INTO SPRINT
-                          (ID, DURATION, REST, NUMBER) 
-                           VALUES 
-                          (?,?,?,?);"""
-        data_tuple = (chat_id, 30, 5, 5)
-        c.execute(insert_query, data_tuple)
-        conn.commit()
-        print("New user inserted successfully into SPRINT table ", c.rowcount)
-        c.close()
-    try:
-        # Connecting to the SQL database
-        conn = sqlite3.connect('dbs/sprint.db')
-        c = conn.cursor()
 
-        chat_id = update.message.chat_id
-        chat_id = str(chat_id)
+    chat_id, dur, rest, num = record
 
-        selectQuery = """SELECT * from SPRINT where ID = ?"""
-        c.execute(selectQuery, (chat_id,))
-        record = c.fetchone()
-
-        dur = record[1]
-        rest = record[2]
-        num = record[3]
-
-        c.close()
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print("The SQLite connection is closed")
+    conn.close()
 
     n = num
     print(n)
@@ -967,17 +795,17 @@ def startSprint(update, context):
                               + str(dur) + " minutes each ⌛\n"
                               + str(rest) + " minutes rest time in between 😌\n"
                               + "\n" + "Press stop sprint to stop sprint. ")
-    restRest = rest
-    durDur = dur
+    newRest = rest
+    newDur = dur
     while n > 0:
-        context.job_queue.run_once(callback_alarm_duration, durDur, context=chat_id, name=str(chat_id))
-        restRest = restRest + dur + rest
+        context.job_queue.run_once(callback_alarm_duration, newDur, context=chat_id, name=str(chat_id))
+        newRest = newRest + dur + rest
         if n != 1:
-            context.job_queue.run_once(callback_alarm_rest, restRest, context=chat_id, name=str(chat_id))
+            context.job_queue.run_once(callback_alarm_rest, newRest, context=chat_id, name=str(chat_id))
         if n == 1:
-            context.job_queue.run_once(callback_alarm_last, restRest, context=chat_id, name=str(chat_id))
-        durDur = durDur + rest + dur
-        n = n - 1
+            context.job_queue.run_once(callback_alarm_last, newRest, context=chat_id, name=str(chat_id))
+        newDur = newDur + rest + dur
+        n -= 1
 
 
 # Main button menu
@@ -1062,8 +890,7 @@ def callback_alarm_50(context) -> None:
 # Callback for sprint
 def callback_alarm_duration(context) -> None:
     job = context.job
-    id = job.context
-    id = str(id)
+    id = str(job.context)
     restTime = get_sprint_info(id, 2)
     print(restTime)
 
@@ -1079,23 +906,18 @@ def get_sprint_info(id, num):
     record = c.fetchone()
     c.close()
     # Send user a message with the updated sprint duration
-    dur = record[1]
-    rest = record[2]
-    number = record[3]
-    strdur = str(dur)
-    strrest = str(rest)
-    strnumber = str(number)
+
+    chat_id, dur, rest, number = record
     total = number * (dur + rest)
-    strtotal = str(total)
 
     if num == 1:
-        return strdur
+        return str(dur)
     if num == 2:
-        return strrest
+        return str(rest)
     if num == 3:
-        return strnumber
+        return str(number)
     if num == 4:
-        return strtotal
+        return str(total)
 
 
 def callback_alarm_rest(context) -> None:
@@ -1263,8 +1085,4 @@ def main():
 
 if __name__ == '__main__':
     bot_token = "TOKEN"
-    endpoint = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-    response = requests.get(endpoint)
-    print(response.text)
-
     main()
