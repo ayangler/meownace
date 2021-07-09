@@ -456,10 +456,11 @@ def morning(context):
         context.bot.send_message(chat_id=chat_id, text=message)
 
 
-# To-do list reminder, sends reminders if there are items remaining on the to-do list.
-
+# To-do list reminder + self care, sends reminders if there are items remaining on the to-do list.
 def list_reminder(context):
-    sticker_url = 'CAACAgUAAxkBAAIIFmDlZCMBw6yYfKTntImNuRpVKQdZAAKzBQACoPkoV4iWYNQQxMDEIAQ'
+    # sticker_url = 'CAACAgUAAxkBAAIIFmDlZCMBw6yYfKTntImNuRpVKQdZAAKzBQACoPkoV4iWYNQQxMDEIAQ'
+    sticker_url = 'CAACAgUAAxkBAAIKamDoAgzCqkfj-gABbUfu5F2X8yQdOgACiwMAAuw5QFe5EDq90bFkzCAE'
+
     conn = sqlite3.connect("dbs/users.db")
     c = conn.cursor()
 
@@ -473,12 +474,14 @@ def list_reminder(context):
         c2.execute("SELECT task FROM todolist WHERE chatid='" + chat_id + "'")
         rows = [i[0] for i in c2.fetchall()]
 
-        # Send message only if users has items left on to-do list
-        if len(rows) != 0:
-            context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
+        context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
+        message = "Stay hydrated!\n"
 
-            context.bot.send_message(chat_id=chat_id, text="Reminder: You have " + str(
-                len(rows)) + " item(s) left on your to-do list.")
+        if len(rows) != 0:
+            message += "Reminder: You have " + str(
+                len(rows)) + " item(s) left on your to-do list."
+
+        context.bot.send_message(chat_id=chat_id, text=message)
 
     conn2.close()
 
@@ -1060,20 +1063,20 @@ def main():
     # Log all errors
     dp.add_error_handler(error)
 
-    # Morning message
+    # Morning message at 6.00 am
     j = updater.job_queue
     job_morning = j.run_daily(morning, days=(0, 1, 2, 3, 4, 5, 6),
                               time=datetime.time(hour=6, minute=00, second=00, tzinfo=pytz.timezone("Asia/Singapore")))
-
-    # Daily reset
-    job_reset = j.run_daily(daily_reset, days=(0, 1, 2, 3, 4, 5, 6),
-                            time=datetime.time(hour=23, minute=59, second=0,
-                                               tzinfo=pytz.timezone("Asia/Singapore")))
 
     # Reminder message at 6.30pm SGT
     job_reminder = j.run_daily(list_reminder, days=(0, 1, 2, 3, 4, 5, 6),
                                time=datetime.time(hour=12 + 6, minute=30, second=00,
                                                   tzinfo=pytz.timezone("Asia/Singapore")))
+
+    # Daily reset at 11.59pm SGT
+    job_reset = j.run_daily(daily_reset, days=(0, 1, 2, 3, 4, 5, 6),
+                            time=datetime.time(hour=23, minute=59, second=0,
+                                               tzinfo=pytz.timezone("Asia/Singapore")))
 
     job_loss = j.run_repeating(loss, datetime.timedelta(minutes=30))
 
