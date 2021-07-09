@@ -141,7 +141,7 @@ def addtask(update, context):
         conn.commit()
         conn.close()
 
-        update.message.reply_text(message)
+        update.message.reply_text(message, disable_notification=True)
         show_list(update, context)
     else:
         update.message.reply_text("Format: /add <name of task>")
@@ -291,18 +291,18 @@ def show_list(update, context):
 @send_typing_action
 def pat(update, context):
     update_health(str(update.message.chat_id), 1)
-    # context.bot.send_sticker(chat_id = chat_id, sticker =
-    # "CAACAgUAAxkBAAIBfmC9zdWSIGzwSFuGfbY2-DaM27eUAAJyAAOw6HQBc5yhV2DYgA0fBA", disable_notification = True)
-    update.message.reply_text("You gave meownace a pat on the head! +HP")
+    context.bot.send_animation(chat_id=update.message.chat_id,
+                               animation="https://drive.google.com/uc?id=11WbSar89heMax-ppRtT8VkQ_e-zvnryz",
+                               caption="You gave meownace a pat on the head! +HP")
+    # update.message.reply_text()
 
 
 @send_typing_action
 def walk(update, context):
     update_health(str(update.message.chat_id), 1)
-    # context.bot.send_sticker(chat_id = chat_id, sticker =
-    # "CAACAgUAAxkBAAIBfmC9zdWSIGzwSFuGfbY2-DaM27eUAAJyAAOw6HQBc5yhV2DYgA0fBA", disable_notification = True)
-
-    update.message.reply_text("You took meownace on a walk! +HP")
+    context.bot.send_animation(chat_id=update.message.chat_id,
+                               animation="https://drive.google.com/uc?id=1J3Di8WM5VhPQ-aVa48Lxeweci_qZL8x0",
+                               caption="You took meownace on a walk! +HP")
 
 
 def feed(update, context):
@@ -365,7 +365,8 @@ def get_hp_sticker(hp):
     elif hp == 150:
         return random.choice(ecstatic), "Ecstatic"
     else:
-        return "Error in get_hp_sticker"
+        print("Error in get_hp_sticker")
+        return
 
 
 @send_typing_action
@@ -435,7 +436,7 @@ def loss(context):
 
     # Send message to all users
     for chat_id in chat_ids:
-        update_health(chat_id, -1)
+        update_health(chat_id, -5)
 
 
 # Morning message sent to every user.
@@ -463,6 +464,7 @@ def list_reminder(context):
     c = conn.cursor()
 
     chat_ids = [i[0] for i in c.execute("SELECT chatid FROM users")]
+    conn.close()
 
     conn2 = sqlite3.connect('dbs/todolist.db')
     c2 = conn2.cursor()
@@ -475,10 +477,9 @@ def list_reminder(context):
         if len(rows) != 0:
             context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
 
-            context.bot.send_message(chat_id=chat_id, text="(。・・)ノ Reminder: You have " + str(
+            context.bot.send_message(chat_id=chat_id, text="Reminder: You have " + str(
                 len(rows)) + " item(s) left on your to-do list.")
 
-    conn.close()
     conn2.close()
 
 
@@ -487,10 +488,11 @@ def daily_reset(context):
     conn = sqlite3.connect("dbs/users.db")
     c = conn.cursor()
 
+    chat_ids = [i[0] for i in c.execute("SELECT chatid FROM USERS")]
+    conn.close()
+
     conn2 = sqlite3.connect("dbs/todolist.db")
     c2 = conn2.cursor()
-
-    chat_ids = [i[0] for i in c.execute("SELECT chatid FROM USERS")]
 
     for chat_id in chat_ids:
         # Get the number of items left inside the user's todolist
@@ -514,11 +516,9 @@ def daily_reset(context):
         context.bot.send_sticker(chat_id=chat_id, sticker=sleep_sticker, disable_notification=True)
         context.bot.send_message(chat_id=chat_id, text=message)
 
-        conn.commit()
         conn2.commit()
 
     conn2.close()
-    conn.close()
 
 
 """ Misc functions """
@@ -1070,6 +1070,7 @@ def main():
                             time=datetime.time(hour=23, minute=59, second=0,
                                                tzinfo=pytz.timezone("Asia/Singapore")))
 
+    # Reminder message at 6.30pm SGT
     job_reminder = j.run_daily(list_reminder, days=(0, 1, 2, 3, 4, 5, 6),
                                time=datetime.time(hour=12 + 6, minute=30, second=00,
                                                   tzinfo=pytz.timezone("Asia/Singapore")))
