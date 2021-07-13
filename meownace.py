@@ -577,7 +577,7 @@ def timer(update, context):
         ['⚙ sprint settings'],
         ['stop sprint!'],
     ]
-    update.message.reply_text(text="Welcome to Meownace's timer! Please select options below.\n(Note: although the "
+    update.message.reply_text(text="Welcome to Meownace's timer! 💖 Please select options below.\n(Note: although the "
                                    "buttons are listed in minutes, the actual timings have been changed to seconds "
                                    "for easier testing. Eg: Button that says 15min will last 15s!)",
                               reply_markup=ReplyKeyboardMarkup(keyboard))
@@ -706,7 +706,7 @@ def sprint_full_info(chat_id):
            + str(rest) + " minutes rest time in between 😌\n\n" \
            + "Press 'i am done' -> '⚙ sprint settings' in the keyboard if you would like to " \
            + "change anything else!\n " \
-           + "If you are ready to begin your sprint, press 'i am done' -> 'start sprint'"
+           + "If you are ready to begin your sprint, press 'i am done' -> 'start sprint' ✨"
 
 
 # Change the duration for the sprint
