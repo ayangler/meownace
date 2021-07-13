@@ -1047,10 +1047,12 @@ def main():
     dp.add_handler(MessageHandler(filter_sprintTimer, startSprint))
     dp.add_handler(MessageHandler(FilterCancelTimer(), stopSprint))
     dp.add_handler(MessageHandler(filter_return, timer))
+
     # Message handler for change buttons
     dp.add_handler(MessageHandler(FilterChangeDuration(), changeDur))
     dp.add_handler(MessageHandler(FilterChangeRest(), changeRest))
     dp.add_handler(MessageHandler(FilterChangeNumber(), changeNum))
+
     # Message handler for db side
     dp.add_handler(MessageHandler(FilterSprintDuration(), changeDurDB))
     dp.add_handler(MessageHandler(FilterSprintRest(), changeRestDB))
