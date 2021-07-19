@@ -75,9 +75,9 @@ def help(update, context):
                                   '/about - about the developers\n\n'
                                   ' 📅 TODO 📅\n'
                                   '/add <name of task> - add a task \n'
-                                  '/clear <name of task> or <index> - remove a finished task \n'
+                                  '/clear <task> or <index> - remove a finished task \n'
                                   '/clearall - remove all finished tasks \n'
-                                  '/delete <name of task> or <index> - remove a task \n'
+                                  '/delete <task> or <index> - remove a task \n'
                                   '/deleteall - remove all tasks\n'
                                   '/list - show all your tasks \n\n'
                                   '🏫 STUDY 🏫\n'
@@ -90,8 +90,7 @@ def help(update, context):
                                   '/pat - gimme head pats \n'
                                   '/walk - take me on a walk \n'
                                   '/inspirational - get inspired \n'
-                                  '/catfact - learn more about my species \n'
-                                  '/pic - get cute cat pics [WIP]\n')
+                                  '/catfact - learn more about my species \n')
 
 
 """ About us """
@@ -294,7 +293,6 @@ def pat(update, context):
     context.bot.send_animation(chat_id=update.message.chat_id,
                                animation="https://drive.google.com/uc?id=11WbSar89heMax-ppRtT8VkQ_e-zvnryz",
                                caption="You gave meownace a pat on the head! +HP")
-    # update.message.reply_text()
 
 
 @send_typing_action
@@ -321,7 +319,7 @@ def feed(update, context):
                 : 'CAACAgUAAxkBAAIKo2Dtoct2Oil7KTFEglS32euzPH69AAKzAwAC0tJAV7NyW4z0rXnpIAQ',
                 "Mouth-watering macarons! +HP"
                 : 'CAACAgUAAxkBAAIK02D1AzJ9iT6nyLENke0FfNfssR0LAAL4AgACssiAVzGe74Z0hgITIAQ'
-    }
+                }
 
     text, sticker_url = random.choice(list(stickers.items()))
 
@@ -382,8 +380,7 @@ def health(update, context):
     conn = sqlite3.connect('dbs/users.db')
     c = conn.cursor()
 
-    chat_id = update.message.chat_id
-    chat_id = str(chat_id)
+    chat_id = str(update.message.chat_id)
 
     hp = c.execute("SELECT hp FROM users WHERE chatid='" + chat_id + "'").fetchall()[0][0]
 
@@ -396,6 +393,7 @@ def health(update, context):
     update.message.reply_text(health_bar(hp) + "\nMood: " + text)
 
 
+# Returns a string representation of meownace's health
 def health_bar(hp):
     maxHP = 150
     healthDashes = 15
@@ -465,7 +463,6 @@ def morning(context):
 
 # To-do list reminder + self care, sends reminders if there are items remaining on the to-do list.
 def list_reminder(context):
-    # sticker_url = 'CAACAgUAAxkBAAIIFmDlZCMBw6yYfKTntImNuRpVKQdZAAKzBQACoPkoV4iWYNQQxMDEIAQ'
     sticker_url = 'CAACAgUAAxkBAAIKamDoAgzCqkfj-gABbUfu5F2X8yQdOgACiwMAAuw5QFe5EDq90bFkzCAE'
 
     conn = sqlite3.connect("dbs/users.db")
@@ -482,10 +479,10 @@ def list_reminder(context):
         rows = [i[0] for i in c2.fetchall()]
 
         context.bot.send_sticker(chat_id=chat_id, sticker=sticker_url, disable_notification=True)
-        message = "Stay hydrated!\n"
+        message = "Stay hydrated!"
 
         if len(rows) != 0:
-            message += "Reminder: You have " + str(
+            message += "\nReminder: You have " + str(
                 len(rows)) + " item(s) left on your to-do list."
 
         context.bot.send_message(chat_id=chat_id, text=message)
@@ -584,9 +581,7 @@ def timer(update, context):
         ['⚙ sprint settings'],
         ['stop sprint!'],
     ]
-    update.message.reply_text(text="Welcome to Meownace's timer! 💖 Please select options below.\n(Note: although the "
-                                   "buttons are listed in minutes, the actual timings have been changed to seconds "
-                                   "for easier testing. Eg: Button that says 15min will last 15s!)",
+    update.message.reply_text(text="Welcome to Meownace's timer! 💖 Please select options below.\n",
                               reply_markup=ReplyKeyboardMarkup(keyboard))
 
 
@@ -662,7 +657,6 @@ def changeNum(update, context):
 
 
 # Adds the user to the sprint database with default values if they are not in the sprint database.
-
 def insert_new_user_sprint(chat_id):
     # Connecting to the SQL database
     conn = sqlite3.connect('dbs/sprint.db')
@@ -918,11 +912,11 @@ def get_sprint_info(id, num):
     selectQuery = """SELECT * from SPRINT where ID = ?"""
     c.execute(selectQuery, (id,))
     record = c.fetchone()
-    c.close()
-    # Send user a message with the updated sprint duration
 
     chat_id, dur, rest, number = record
     total = number * (dur + rest)
+
+    conn.close()
 
     if num == 1:
         return str(dur)
