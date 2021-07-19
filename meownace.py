@@ -318,7 +318,9 @@ def feed(update, context):
                 "Purrfect pudding! +HP"
                 : 'CAACAgUAAxkBAAIKomDtoU9nA3XHxaXa7nFGJoZ2C4hXAAKbAgACWppAV4rN0C_IFzsEIAQ',
                 "Delicious dango! +HP"
-                : 'CAACAgUAAxkBAAIKo2Dtoct2Oil7KTFEglS32euzPH69AAKzAwAC0tJAV7NyW4z0rXnpIAQ'}
+                : 'CAACAgUAAxkBAAIKo2Dtoct2Oil7KTFEglS32euzPH69AAKzAwAC0tJAV7NyW4z0rXnpIAQ',
+                "Mouth-watering macarons! +HP"
+                : 'CAACAgUAAxkBAAIK02D1AzJ9iT6nyLENke0FfNfssR0LAAL4AgACssiAVzGe74Z0hgITIAQ'}
 
     text, sticker_url = random.choice(list(stickers.items()))
 
