@@ -318,9 +318,7 @@ def feed(update, context):
                 "Purrfect pudding! +HP"
                 : 'CAACAgUAAxkBAAIKomDtoU9nA3XHxaXa7nFGJoZ2C4hXAAKbAgACWppAV4rN0C_IFzsEIAQ',
                 "Delicious dango! +HP"
-                : 'CAACAgUAAxkBAAIKo2Dtoct2Oil7KTFEglS32euzPH69AAKzAwAC0tJAV7NyW4z0rXnpIAQ',
-                "Mouth-watering macarons! +HP"
-                : 'CAACAgUAAxkBAAIK02D1AzJ9iT6nyLENke0FfNfssR0LAAL4AgACssiAVzGe74Z0hgITIAQ'}
+                : 'CAACAgUAAxkBAAIKo2Dtoct2Oil7KTFEglS32euzPH69AAKzAwAC0tJAV7NyW4z0rXnpIAQ'}
 
     text, sticker_url = random.choice(list(stickers.items()))
 
@@ -797,6 +795,7 @@ def startSprint(update, context):
     conn.close()
 
     n = num
+    print("number of pomodoros is: ")
     print(n)
     total = n * (dur + rest)
     update.message.reply_text("Sprint started. It will last " + str(total) + " min. Your sprint consists of:\n"
@@ -804,16 +803,19 @@ def startSprint(update, context):
                               + str(dur) + " minutes each ⌛\n"
                               + str(rest) + " minutes rest time in between 😌\n"
                               + "\n" + "Press stop sprint to stop sprint. ")
-    newRest = rest
+    newRest = 0
     newDur = dur
     while n > 0:
-        context.job_queue.run_once(callback_alarm_duration, newDur, context=chat_id, name=str(chat_id))
+        context.job_queue.run_once(callback_alarm_duration, newDur * 60, context=chat_id, name=str(chat_id))
         newRest = newRest + dur + rest
         if n != 1:
-            context.job_queue.run_once(callback_alarm_rest, newRest, context=chat_id, name=str(chat_id))
+            print(newRest)
+            context.job_queue.run_once(callback_alarm_rest, newRest * 60, context=chat_id, name=str(chat_id))
         if n == 1:
-            context.job_queue.run_once(callback_alarm_last, newRest, context=chat_id, name=str(chat_id))
+            print(newRest)
+            context.job_queue.run_once(callback_alarm_last, newRest * 60, context=chat_id, name=str(chat_id))
         newDur = newDur + rest + dur
+        print(newDur)
         n -= 1
 
 
@@ -1096,5 +1098,5 @@ def main():
 
 
 if __name__ == '__main__':
-    bot_token = "TOKEN"
+    bot_token = "1797095104:AAG18ui-lmRD54bIDZzw1dEQARn2hm451YY"
     main()
