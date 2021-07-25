@@ -292,7 +292,7 @@ def pat(update, context):
     update_health(str(update.message.chat_id), 1)
     context.bot.send_animation(chat_id=update.message.chat_id,
                                animation="https://drive.google.com/uc?id=11WbSar89heMax-ppRtT8VkQ_e-zvnryz",
-                               caption="You gave Meownac a pat on the head! +HP")
+                               caption="You gave Meownace a pat on the head! +HP")
 
 
 @send_typing_action
@@ -300,7 +300,7 @@ def walk(update, context):
     update_health(str(update.message.chat_id), 1)
     context.bot.send_animation(chat_id=update.message.chat_id,
                                animation="https://drive.google.com/uc?id=1J3Di8WM5VhPQ-aVa48Lxeweci_qZL8x0",
-                               caption="You took Meownac on a walk! +HP")
+                               caption="You took Meownace on a walk! +HP")
 
 
 def feed(update, context):
@@ -393,7 +393,7 @@ def health(update, context):
     update.message.reply_text(health_bar(hp) + "\nMood: " + text)
 
 
-# Returns a string representation of Meownac's health
+# Returns a string representation of Meownace's health
 def health_bar(hp):
     maxHP = 150
     healthDashes = 15
@@ -490,7 +490,7 @@ def list_reminder(context):
     conn2.close()
 
 
-# Daily reset (11.59pm, deduct hp from Meownac if there are items left in the todo list)
+# Daily reset (11.59pm, deduct hp from Meownace if there are items left in the todo list)
 def daily_reset(context):
     conn = sqlite3.connect("dbs/users.db")
     c = conn.cursor()
