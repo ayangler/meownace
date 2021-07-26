@@ -347,8 +347,7 @@ def get_hp_sticker(hp):
                   'CAACAgUAAxkBAAIGEGDieGMvgs-8Hnq7iMdNSMKy_2QtAALiAwACn7oRV_UcNch5tNKhIAQ']
     disappointed = ['CAACAgUAAxkBAAIIAmDlXNXdOYIzM6dVkFbLJguFcLlvAAKxAgACWp0pV3mOuTdcqCX9IAQ']
     sad = ['CAACAgUAAxkBAAIDAWDIoGjY0F3mLKqbNEPscAaAvq29AAIfBAACEwNJVpUZ2LvHB95yHwQ']
-    neutral = ['CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E',
-               'CAACAgUAAxkBAAIIE2DlY9kWmoa4pet70SzL8brgFvUQAAKnAgACoXcpVzCFwQjfFP6bIAQ']
+    neutral = ['CAACAgUAAxkBAAIDAAFgyKAPsMHCgcLTz_kKGr9hiD1GEwACQQQAAsagQFZvDPyy_eIjox8E']
     pleased = ['CAACAgUAAxkBAAIC7mDInlmoxvXO3UsXy6PLzpyngPXQAALpAgACZk5JVq9UssuYYljOHwQ']
     joyous = ['CAACAgUAAxkBAAIIAWDlXLktls_J9Z2mk38EMz2zgOilAAIRAwAC9p8xV2FvIH-UrVdVIAQ']
     ecstatic = ['CAACAgUAAxkBAAIIcmDlZ2yVVMAVzN2Rlxhn4seroWR3AAJMAgACxRExVyn-qYg11FplIAQ',
